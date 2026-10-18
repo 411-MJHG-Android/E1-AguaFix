@@ -23,4 +23,10 @@ export class WaterReport{
     @CreateDateColumn({type: 'timestamp'})
     createdAt: Date;
 
+    @Column()
+    photoUrl: string;
+
+    @Column({ nullable: true })
+    repairPhotoUrl: String;
+
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Post, UploadedFile, UseInterceptors } from "@nestjs/common";
 import { ReportService } from "./reports.service";
 import { BodyResponse } from "./dto/body-response.dto";
 import { Get } from "@nestjs/common";
@@ -6,12 +6,15 @@ import { CreateReportDto } from "./dto/report.dto";
 import { generateReportTemplate } from "./templates/report.template";
 import { EmailService } from "../email/email.service";
 import { envs } from "../config/envs";
+import { StorageService } from "../storage/storage.service";
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('reports')
 export class ReportController {
     constructor(
         private reportService: ReportService,
         private emailService: EmailService,
+        private storageService: StorageService
     ){}
 
     @Get()
@@ -38,7 +41,9 @@ export class ReportController {
     }
 
     @Post()
+    @UseInterceptors(FileInterceptor('photo'))
         async createReport(
+            @UploadedFile() file: Express.Multer.File,
             @Body() createReportDto: CreateReportDto
         ){
             const response: BodyResponse = {
@@ -48,10 +53,16 @@ export class ReportController {
                 data: undefined
             };
             try{
-                const report = await this.reportService.createReport(createReportDto);
+                if(!file){
+                    throw new BadRequestException('El de la foto es obligatorio')
+                }
+                 //Subir la foto a AWS
+                const photoUrl = await this.storageService.uploadFile(file, 'reports');
+                const report = await this.reportService.createReport(createReportDto, photoUrl);
+               
 
                 //Genera el HTML y envia el correo a la cuadrilla
-                const template = generateReportTemplate(createReportDto);
+                const template = generateReportTemplate(createReportDto, photoUrl);
                 await this.emailService.sendEmail(
                     envs.MAINTENANCE_CREW_EMAIL,
                     `Aviso: Fuega de Agua #${report.id} - Severidad ${report.severity.toUpperCase}`,

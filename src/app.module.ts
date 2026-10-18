@@ -7,6 +7,8 @@ import { EmailService } from './email/email.service';
 import { ReportModule } from './reports/reports.module';
 import { EmailModule } from './email/email.module';
 import { AuthModule } from './auth/auth.module';
+import { StorageService } from './storage/storage.service';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
   imports: [
@@ -14,8 +16,9 @@ import { AuthModule } from './auth/auth.module';
     ReportModule,
     EmailModule,
     AuthModule,
+    StorageModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, StorageService],
 })
 export class AppModule {}

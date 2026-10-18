@@ -17,8 +17,12 @@ export class ReportService {
     });
   }
 
-  async createReport(createReportDto: CreateReportDto): Promise<WaterReport> {
-    const newReport = this.reportRepository.create(createReportDto);
+  async createReport(createReportDto: CreateReportDto, photoUrl: string) : Promise<WaterReport> {
+    const newReport = this.reportRepository.create({
+      ...createReportDto,
+      photoUrl 
+  });
     return await this.reportRepository.save(newReport);
   }
+
 }
